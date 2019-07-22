@@ -8,3 +8,53 @@ Created on Mon Jul 22 09:38:34 2019
 
 # LIBROSA TESTING FILE
 import librosa
+import numpy as np
+import matplotlib.pyplot as plt
+import librosa.display
+import IPython.display as ipd
+
+audio_path = '/Users/rmoctezuma/Desktop/Music/badguy.wav'
+x, sr = librosa.load(audio_path)
+print(type(x), type(sr))
+print(x.shape, sr)
+plt.figure(figsize=(14, 5))
+librosa.display.waveplot(x, sr=sr)
+X = librosa.stft(x)
+Xdb = librosa.amplitude_to_db(abs(X))
+plt.figure(figsize=(14, 5))
+librosa.display.specshow(Xdb, sr=sr, x_axis='time', y_axis='hz')
+plt.colorbar()
+librosa.display.specshow(Xdb, sr=sr, x_axis='time', y_axis='log')
+plt.colorbar()
+print('tempo' + str(librosa.beat.tempo(x)))
+onset_env = librosa.onset.onset_strength(x, sr=sr)
+tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+dtempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr, aggregate=None)
+
+#TEMPO GRAPH
+# Convert to scalar
+tempo = np.asscalar(tempo)
+# Compute 2-second windowed autocorrelation
+hop_length = 512
+ac = librosa.autocorrelate(onset_env, 2 * sr // hop_length)
+freqs = librosa.tempo_frequencies(len(ac), sr=sr, hop_length=hop_length)
+# Plot on a BPM axis.  We skip the first (0-lag) bin.
+plt.figure(figsize=(8,4))
+plt.semilogx(freqs[1:], librosa.util.normalize(ac)[1:],
+label='Onset autocorrelation', basex=2)
+plt.axvline(tempo, 0, 1, color='r', alpha=0.75, linestyle='--',
+label='Tempo: {:.2f} BPM'.format(tempo))
+plt.xlabel('Tempo (BPM)')
+plt.grid()
+plt.title('Static tempo estimation')
+plt.legend(frameon=True)
+plt.axis('tight')
+plt.show()
+#TEMPO GRAPH 2
+plt.figure(8,45)
+tg = librosa.feature.tempogram(onset_envelope=onset_env, sr=sr, hop_length=hop_length)
+librosa.display.specshow(tg, x_axis='time', y_axis='tempo')
+plt.plot(librosa.frames_to_time(np.arange(len(dtempo))), dtempo,
+color='w', linewidth=1.5, label='Tempo estimate')
+plt.title('Dynamic tempo estimation')
+plt.legend(frameon=True, framealpha=0.75)
