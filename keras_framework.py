@@ -22,7 +22,7 @@ model.add(layers.Dense('''numberofpossibleoutputs''', activation='softmax'))
 
 
 #compiling the model
-model.complile(optimizer = 'rmsprop',
+model.compile(optimizer = 'rmsprop',
                loss = 'categorical_crossentropy',
                metrics = ['accuracy'])
 
